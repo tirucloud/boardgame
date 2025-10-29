@@ -81,11 +81,33 @@ pipeline {
 
         stage('Deploy to Container') {
             steps {
-                sh 'docker run -d --name boardgame -p 8081:8080 tirucloud/boardgame:latest || true'
+                sh '''
+                docker rm -f boardgame || true
+                docker run -d --name boardgame -p 8081:8080 tirucloud/boardgame:latest
+                '''
             }
         }
-    }
+         stage('Deploy to EKS') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-cred'
+        ]]) {
+            sh '''
+                echo "🔹 Setting up kubeconfig for EKS..."
+                aws eks update-kubeconfig --region us-east-1 --name tiru-cluster
 
+                echo "🔹 Deploying application to EKS..."
+                kubectl apply -f Kubernetes/ds.yml --validate=false
+
+                echo "✅ Deployment applied successfully!"
+                kubectl get pods -o wide
+            '''
+        }
+    }
+}
+
+    }
     post {
         always {
             emailext(
