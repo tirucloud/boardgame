@@ -88,19 +88,19 @@ pipeline {
             }
         }
          stage('Deploy to EKS') {
-    steps {
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-cred'
-        ]]) {
-            sh '''
-                echo "🔹 Setting up kubeconfig for EKS..."
+            steps {
+                withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: 'aws-cred'
+                ]]) {
+                sh '''
+                echo "Setting up kubeconfig for EKS..."
                 aws eks update-kubeconfig --region us-east-1 --name tiru-cluster
 
-                echo "🔹 Deploying application to EKS..."
+                echo "Deploying application to EKS..."
                 kubectl apply -f Kubernetes/ds.yml --validate=false
 
-                echo "✅ Deployment applied successfully!"
+                echo "Deployment applied successfully!"
                 kubectl get pods -o wide
             '''
         }
