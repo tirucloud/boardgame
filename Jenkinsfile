@@ -1,103 +1,99 @@
 pipeline {
     agent any
 
- tools {
-     jdk 'java17'
-     maven 'maven3.6'
- }
-environment {
-        SCANNER_HOME=tool 'sonar-scanner'
-}
-    
+    tools {
+        jdk 'jdk17'
+        maven 'maven3.6'
+    }
+
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+
     stages {
-        
-       stages {
-        stage('clean workspace'){
-            steps{
+        stage('Clean Workspace') {
+            steps {
                 cleanWs()
             }
         }
-        stage('Checkout from Git'){
-            steps{
+
+        stage('Checkout from Git') {
+            steps {
                 git branch: 'main', url: 'https://github.com/tirucloud/boardgame.git'
             }
         }
-        stage("Sonarqube Analysis "){
-            steps{
-                withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Boardgame \
-                    -Dsonar.projectKey=Boardgame '''
-                }
-            }
-        }
-        stage("quality gate"){
-           steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
-                }
-            } 
-        }
-        stage('TRIVY FS SCAN') {
+
+        stage('SonarQube Analysis') {
             steps {
-                sh "trivy fs . > trivyfs.txt"
-            }
-        }
-        stage("Docker Build & Push"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker build -t boardgame ."
-                       sh "docker tag boardgame tirucloud/netflix:latest "
-                       sh "docker push tirucloud/boardgame:latest "
-                    }
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                        $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectName=Boardgame \
+                        -Dsonar.projectKey=Boardgame
+                    '''
                 }
             }
         }
-        stage("TRIVY"){
-            steps{
-                sh "trivy image tirucloud/boardgame:latest > trivyimage.txt" 
-            }
-        }
-        stage("Docker Push"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker push tirucloud/boardgame:latest "
-                    }
+
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
                 }
             }
         }
-        
-        stage('Deploy to container'){
-            steps{
-                sh 'docker run -d --name boardgame -p 8081:8080 tirucloud/boardgame:latest'
+
+        stage('Trivy FS Scan') {
+            steps {
+                sh 'trivy fs . > trivyfs.txt'
             }
         }
-        stage('Deploy to kubernets'){
-            steps{
-                script{
-                    dir('Kubernetes') {
-                        withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                                sh 'kubectl apply -f deployment.yml'
-                                sh 'kubectl apply -f service.yml'
-                        }   
+
+        stage('Docker Build & Tag') {
+            steps {
+                script {
+                    sh 'docker build -t boardgame .'
+                    sh 'docker tag boardgame tirucloud/boardgame:latest'
+                }
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh 'trivy image tirucloud/boardgame:latest > trivyimage.txt'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+                        sh 'docker push tirucloud/boardgame:latest'
                     }
                 }
             }
         }
 
-    }
-    post {
-     always {
-        emailext attachLog: true,
-            subject: "'${currentBuild.result}'",
-            body: "Project: ${env.JOB_NAME}<br/>" +
-                "Build Number: ${env.BUILD_NUMBER}<br/>" +
-                "URL: ${env.BUILD_URL}<br/>",
-            to: 'tirucloud@gmail.com',
-            attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+        stage('Deploy to Container') {
+            steps {
+                sh 'docker run -d --name boardgame -p 8081:8080 tirucloud/boardgame:latest || true'
+            }
         }
     }
-}
+
+    post {
+        always {
+            emailext(
+                attachLog: true,
+                subject: "${currentBuild.result}",
+                body: """
+                    <b>Project:</b> ${env.JOB_NAME}<br/>
+                    <b>Build Number:</b> ${env.BUILD_NUMBER}<br/>
+                    <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a><br/>
+                """,
+                to: 'tirucloud@gmail.com',
+                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+            )
+        }
     }
 }
