@@ -82,9 +82,7 @@ This web application displays lists of board games and their reviews. While anyo
  - Server authentication token: sonaar-token
 
 ## Configure Email
-manage Jenkins –> configure system there under the E-mail Notification section configure the details as shown in the below image
-Click on Apply and save.
-Click on Manage Jenkins–> credentials and add your mail username and generated password
-This is to just verify the mail configuration
-Now under the Extended E-mail Notification section configure the details as shown in the below images
-Click on Apply and save.
+* manage Jenkins –> configure system there under the E-mail Notification section configure the details Click on Apply and save.
+* Click on Manage Jenkins–> credentials and add your mail username and generated password
+* This is to just verify the mail configuration
+* Now under the Extended E-mail Notification section configure the details as shown in the below images. Click on Apply and save.
