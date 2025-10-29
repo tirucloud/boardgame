@@ -22,7 +22,12 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/tirucloud/boardgame.git'
             }
         }
-
+        stage("Maven build")
+        {
+         steps {
+                sh 'mvn clean package'
+            }
+        }
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-server') {
