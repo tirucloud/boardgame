@@ -51,5 +51,34 @@ This web application displays lists of board games and their reviews. While anyo
   - username: bugs    |     password: bunny (user role)
   - username: daffy   |     password: duck  (manager role)
 5. You can also sign-up as a new user and customize your role to play with the application! 😊
-# boardgame
-# boardgame
+
+## PLUGINS TO BE INSTALLED INSIDE JENKINS
+1. Eclipse Temurin installer plugin
+2. Maven Integration plugin
+3. Sonar Quality Gates Plugin
+4. SonarQube Scanner for Jenkins
+5. Docker Pipeline, Docker plugin, docker-build-step, Docker Commons Plugin
+6. Kubernetes CLI Plugin, Kubernetes plugin
+7. AWS Credentials Plugin
+8. Email Extension Template Plugin
+
+## Add bellow crdentials in jenkins
+1. mail	
+2. docker-cred (Username with password)	
+3. sonar-token (secret text)
+4. k8s (Secret file)
+5. aws-cred(AWS Credentials)
+
+## Tools to be configured
+1. JDK installations - JDK - jdk17
+2. SonarQube Scanner installations - sonar-scanner - latest
+3. Maven installations - maven3.6
+4. Docker installations - docker - latest
+
+## Global System Configurations
+1. SonarQube installations
+ - Name:sonar-server
+ - Server URL: http://ec2-public-ip:9000
+ - Server authentication token: sonaar-token
+
+   
