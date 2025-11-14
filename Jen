@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-               git branch: 'main', credentialsId: 'git-cred', url: 'https://github.com/ganeshperumal007/Boardgame.git'
+               git branch: 'main', credentialsId: 'git-cred', url: 'https://github.com/tirucloud/Boardgame.git'
             }
         }
         
@@ -70,7 +70,7 @@ pipeline {
             steps {
                script {
                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                            sh "docker build -t ganeshperumal007/boardshack:latest ."
+                            sh "docker build -t tirucloud/boardg:latest ."
                     }
                }
             }
@@ -78,7 +78,7 @@ pipeline {
         
         stage('Docker Image Scan') {
             steps {
-                sh "trivy image --format table -o trivy-image-report.html ganeshperumal007/boardshack:latest "
+                sh "trivy image --format table -o trivy-image-report.html tirucloud/boardg:latest "
             }
         }
         
@@ -86,7 +86,7 @@ pipeline {
             steps {
                script {
                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                            sh "docker push ganeshperumal007/boardshack:latest"
+                            sh "docker push tirucloud/boardg:latest"
                     }
                }
             }
